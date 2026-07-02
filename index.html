@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wander Motorcycle Rentals | Executive Terminal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #c5a059; --navy: #0a192f; --white: #ffffff; --light-bg: #f4f7f9; --border: #e1e8ed; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--navy); margin: 0; padding: 0; color: #333; }
+        
+        /* UI PANEL DESIGN */
+        .crm-wrapper { max-width: 1200px; margin: 40px auto; background: var(--white); border-radius: 30px; overflow: hidden; box-shadow: 0 50px 100px rgba(0,0,0,0.5); }
+        .sidebar-header { background: var(--navy); padding: 30px 40px; color: var(--white); display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--gold); }
+        .sidebar-header h1 { margin: 0; font-size: 28px; letter-spacing: -1px; font-weight: 800; }
+        .sidebar-header h1 span { color: var(--gold); }
+        .main-content { padding: 30px 40px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .section-tag { grid-column: span 4; font-size: 11px; font-weight: 800; color: var(--navy); text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid var(--gold); padding-bottom: 5px; margin-top: 5px; display: flex; align-items: center; gap: 10px; }
+        .section-tag::after { content: ''; height: 1px; flex-grow: 1; background: var(--light-bg); }
+
+        .input-box { display: flex; flex-direction: column; gap: 4px; }
+        .input-box label { font-size: 10px; font-weight: 700; color: var(--navy); opacity: 0.8; }
+        input, select { padding: 10px 15px; border: 2px solid var(--border); border-radius: 12px; font-size: 13px; background: var(--light-bg); font-weight: 600; transition: all 0.3s ease; }
+        input:focus { border-color: var(--gold); outline: none; background: #fff; box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.1); }
+
+        .accessory-hub { grid-column: span 4; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: var(--light-bg); padding: 15px; border-radius: 20px; }
+        .acc-chip { background: #fff; padding: 8px 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 2px solid transparent; height: 40px; box-sizing: border-box; }
+        .acc-chip:has(input[type="checkbox"]:checked) { border-color: var(--gold); background: #fffdf5; }
+        .acc-chip label { display: flex; align-items: center; gap: 8px; font-size: 10px; font-weight: 700; cursor: pointer; color: var(--navy); }
+        .acc-chip input[type="number"] { width: 35px; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: 700; background: var(--light-bg); }
+
+        .status-card { grid-column: span 4; background: var(--navy); border-radius: 20px; padding: 25px; display: flex; justify-content: space-around; color: var(--white); border: 2px solid var(--gold); }
+        .status-item strong { font-size: 28px; color: var(--gold); font-weight: 800; display: block; }
+
+        .btn-zone { grid-column: span 4; display: flex; gap: 15px; margin-top: 10px; }
+        .btn-elite { flex: 1; padding: 18px; border-radius: 16px; border: none; cursor: pointer; font-weight: 800; font-size: 14px; text-transform: uppercase; transition: 0.3s; }
+        .btn-gold { background: var(--gold); color: var(--navy); }
+        .btn-navy { background: var(--navy); color: var(--white); border: 1px solid var(--gold); }
+
+        /* PDF & PRINT MASTER SYNC */
+        #print-area { display: none; background: #fff; }
+        .doc-page { 
+            width: 210mm; 
+            height: 296.8mm; 
+            padding: 12mm 15mm; 
+            box-sizing: border-box; 
+            position: relative; 
+            page-break-after: always;
+            color: #000;
+            background: #fff;
+            overflow: hidden;
+            display: block;
+        }
+
+        .doc-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 5px; }
+        .doc-logo { font-size: 20pt; color: var(--navy); font-weight: 800; letter-spacing: -1.5px; white-space: nowrap; }
+        .doc-logo span { color: var(--gold); }
+        .doc-company { text-align: right; font-size: 7.5pt; line-height: 1.2; }
+        .doc-type-title { text-align: center; background: var(--navy); color: var(--gold); padding: 5px; font-size: 12pt; font-weight: 800; margin: 10px 0; border-radius: 4px; }
+        .doc-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border: 1.2pt solid #000; table-layout: fixed; }
+        .doc-table td { border: 0.8pt solid #000; padding: 6px 10px; font-size: 9pt; vertical-align: middle; word-wrap: break-word; }
+        .doc-label { background: #f8f9fa; font-weight: 700; width: 25%; font-size: 7.5pt; text-transform: uppercase; color: var(--navy); }
+        .doc-sec-head { font-size: 10pt; font-weight: 800; color: var(--navy); border-left: 5px solid var(--gold); padding-left: 10px; margin: 12px 0 8px 0; text-transform: uppercase; }
+        
+        .doc-rules-list { padding: 0; margin: 0; list-style: none; border: 1.2pt solid #000; background: #fafafa; border-radius: 4px; }
+        .doc-rules-list li { padding: 6px 12px; font-size: 8pt; line-height: 1.35; border-bottom: 0.8pt solid #cbd5e1; display: flex; align-items: flex-start; gap: 4px; }
+        .doc-rules-list li span { font-weight: 700; color: var(--gold); min-width: 24px; display: inline-block; flex-shrink: 0; }
+        .doc-rules-list li div { text-align: justify; flex-grow: 1; }
+        .doc-rules-list li:last-child { border-bottom: none; }
+        
+        .secure-promissory-container { border: 2pt solid var(--navy); border-radius: 6px; padding: 10px; background: #fff; margin: 12px 0 0 0; box-shadow: 0 2px 8px rgba(0,0,0,0.02); box-sizing: border-box; }
+        .secure-promissory-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5pt solid var(--navy); padding-bottom: 4px; margin-bottom: 6px; }
+        .secure-title-main { font-size: 10.5px; font-weight: 800; color: var(--navy); letter-spacing: 0.5px; }
+        .secure-title-sub { font-size: 7.5px; font-weight: 600; color: #555; text-transform: uppercase; }
+        .secure-serial { font-family: monospace; font-size: 10.5px; font-weight: 800; color: #c21807; }
+        
+        .secure-grid-table { width: 100%; border-collapse: collapse; margin-bottom: 6px; table-layout: fixed; }
+        .secure-grid-table td { border: 1px solid #94a3b8; padding: 4px 6px; font-size: 9.5px; vertical-align: middle; word-wrap: break-word; }
+        .secure-grid-label { background: #f1f5f9; font-weight: 700; color: var(--navy); width: 22%; font-size: 8.5px; text-transform: uppercase; }
+        .secure-editable-cell { font-family: monospace; font-size: 10.5px; font-weight: 700; color: #000; }
+        .secure-legal-clause { font-size: 8.5px; line-height: 1.4; text-align: justify; color: #111; margin: 6px 0; border-top: 1px solid #cbd5e1; padding-top: 5px; }
+
+        .doc-sig-row { display: flex; justify-content: space-between; margin-top: 12px; gap: 15px; width: 100%; box-sizing: border-box; }
+        .doc-sig-box { flex: 1; border: 1.2pt solid #000; height: 75px; position: relative; box-sizing: border-box; }
+        .doc-sig-label { position: absolute; top: -8px; left: 10px; background: #fff; padding: 0 6px; font-weight: 700; font-size: 8pt; white-space: nowrap; }
+
+        .secure-sig-row { display: flex; justify-content: space-between; margin-top: 10px; gap: 12px; width: 100%; box-sizing: border-box; }
+        .secure-sig-box { flex: 1; border: 1.5pt solid var(--navy); height: 80px; position: relative; background: #fafafa; border-radius: 4px; box-sizing: border-box; }
+        .secure-sig-label { position: absolute; top: -8px; left: 8px; background: #fff; padding: 0 4px; font-weight: 800; font-size: 8px; color: var(--navy); text-transform: uppercase; white-space: nowrap; }
+        .secure-sig-hint { position: absolute; bottom: 4px; width: 100%; text-align: center; font-size: 7px; color: #777; font-weight: 600; text-transform: uppercase; }
+        
+        .doc-footer { position: absolute; bottom: 8mm; left: 15mm; right: 15mm; font-size: 7pt; text-align: center; border-top: 1px solid #eee; padding-top: 5px; color: #777; }
+
+        @media print { 
+            @page { size: A4; margin: 0; }
+            body { background: white; padding: 0; }
+            .crm-wrapper { display: none !important; }
+            #print-area { display: block !important; position: static; width: 210mm; }
+            .doc-page { border: none; height: 297mm; page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="crm-wrapper">
+    <div class="sidebar-header">
+        <h1>Wander Motorcycle <span>Rentals</span></h1>
+        <div style="font-weight: 700; color: var(--gold); font-size: 11px;">SECURE LOGISTICS v15.0</div>
+    </div>
+    
+    <div class="main-content">
+        <div class="section-tag">I. Client Portfolio</div>
+        <div class="input-box" style="grid-column: span 2;"><label>Full Name</label><input type="text" id="i_name" oninput="sync()" placeholder="Legal Name"></div>
+        <div class="input-box"><label>Date of Birth</label><input type="date" id="i_dob" oninput="sync()"></div>
+        <div class="input-box"><label>Mobile Number</label><input type="text" id="i_phone" oninput="sync()"></div>
+        <div class="input-box" style="grid-column: span 2;"><label>Passport / ID No</label><input type="text" id="i_id" oninput="sync()"></div>
+        <div class="input-box" style="grid-column: span 2;"><label>Residential Address</label><input type="text" id="i_addr" oninput="sync()"></div>
+
+        <div class="section-tag">II. Fleet Selection</div>
+        <div class="input-box">
+            <label>Motorcycle Asset</label>
+            <select id="i_bike" onchange="sync()">
+                <option value="">Select Asset...</option>
+                <optgroup label="BMW Motorrad"><option>BMW R 1300 GS</option><option>BMW R 1250 ADV</option><option>BMW F 800</option></optgroup>
+                <optgroup label="Honda Power"><option>HONDA AFRICA TWIN 1100</option><option>HONDA NC 750 X</option><option>HONDA X-ADV 750</option><option>HONDA PCX 125</option><option>HONDA FORZA 250</option></optgroup>
+                <optgroup label="Yamaha Revs"><option>YAMAHA T-MAX</option><option>YAMAHA XMAX 250</option><option>YAMAHA NMAX 125</option><option>YAMAHA MT-25 ABS</option><option>YAMAHA R 25 ABS</option><option>YAMAHA RAYZR 125</option></optgroup>
+                <option>50 CC SFM EDITION</option>
+            </select>
+        </div>
+        <div class="input-box"><label>License Plate</label><input type="text" id="i_plate" oninput="sync()"></div>
+        <div class="input-box"><label>Departure KM</label><input type="number" id="i_km" oninput="sync()"></div>
+        <div class="input-box"><label>Fuel Level</label><input type="text" id="i_fuel" oninput="sync()" placeholder="8/8 Full"></div>
+
+        <div class="section-tag">III. Gear Inventory</div>
+        <div class="accessory-hub" id="acc_list">
+            <div class="acc-chip"><label><input type="checkbox" value="Phone Holder" onchange="sync()"> Holder</label> <input type="number" value="1" min="1" oninput="sync()"></div>
+            <div class="acc-chip"><label><input type="checkbox" value="Helmet" onchange="sync()"> Helmet</label> <input type="number" value="1" min="1" oninput="sync()"></div>
+            <div class="acc-chip"><label><input type="checkbox" value="Raincoat" onchange="sync()"> Raincoat</label> <input type="number" value="1" min="1" oninput="sync()"></div>
+            <div class="acc-chip"><label><input type="checkbox" value="Jacket" onchange="sync()"> Jacket</label> <input type="number" value="1" min="1" oninput="sync()"></div>
+            <div class="acc-chip"><label><input type="checkbox" value="Gloves" onchange="sync()"> Gloves</label> <input type="number" value="1" min="1" oninput="sync()"></div>
+            <div class="acc-chip"><label><input type="checkbox" value="Side Cases" onchange="sync()"> Side Cases</label> <input type="number" value="1" min="1" oninput="sync()"></div>
+            <div class="acc-chip"><label><input type="checkbox" value="Top Case" onchange="sync()"> Top Case</label> <input type="number" value="1" min="1" oninput="sync()"></div>
+            <div class="acc-chip"><label><input type="checkbox" value="Security Lock" onchange="sync()"> Lock</label> <input type="number" value="1" min="1" oninput="sync()"></div>
+        </div>
+
+        <div class="section-tag">IV. Damage Inspection Photos (Mobile Camera Support)</div>
+        <div class="input-box" style="grid-column: span 4;">
+            <label style="margin-bottom: 5px;">Take Damage Photos from Camera / Upload Gallery</label>
+            <input type="file" id="i_photos" accept="image/*" multiple capture="environment" style="display:none;" onchange="loadPhotos(this)">
+            <button type="button" class="btn-elite btn-navy" onclick="document.getElementById('i_photos').click()" style="padding: 12px; font-size:12px;">📸 OPEN CAMERA / SELECT PHOTOS</button>
+            <div id="ui_photo_preview" style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;"></div>
+        </div>
+
+        <div class="section-tag">V. Terms & Financials</div>
+        <div class="input-box"><label>Currency</label><select id="i_curr" onchange="runCalc()"><option value="EUR">Euro (€)</option><option value="USD">USD ($)</option><option value="TL">TRY (₺)</option></select></div>
+        <div class="input-box"><label>Daily Rate</label><input type="number" id="i_rate" value="50" oninput="runCalc()"></div>
+        <div class="input-box"><label>Security Deposit</label><input type="number" id="i_dep" oninput="sync()"></div>
+        <div class="input-box"><label>Guarantor Info</label><input type="text" id="i_guar" oninput="sync()"></div>
+        <div class="input-box" style="grid-column: span 2;"><label>Pickup Date</label><input type="datetime-local" id="i_start" onchange="runCalc()"></div>
+        <div class="input-box" style="grid-column: span 2;"><label>Return Date</label><input type="datetime-local" id="i_end" onchange="runCalc()"></div>
+
+        <div class="status-card">
+            <div class="status-item"><small>DURATION</small><strong id="v_days">0</strong> Days</div>
+            <div class="status-item"><small>PAYABLE (<span id="v_curr_label">EUR</span>)</small><strong id="v_total">0.00</strong></div>
+        </div>
+
+        <div class="btn-zone">
+            <button class="btn-elite btn-navy" onclick="triggerPrint()">Print Contract</button>
+            <button class="btn-elite btn-gold" onclick="saveAsPDF()">Download Professional PDF</button>
+        </div>
+    </div>
+</div>
+
+<div id="print-area">
+    <div class="doc-page">
+        <div class="doc-header">
+            <div class="doc-logo">Wander Motorcycle <span>Rentals</span></div>
+            <div class="doc-company"><strong>Wander Motorcycle Rentals Tic. Ltd. Şti.</strong><br>Istanbul / TURKIYE | Tax ID: 123456789<br>rent@wanderrr.com</div>
+        </div>
+        <div class="doc-type-title">OFFICIAL MOTORCYCLE RENTAL AGREEMENT</div>
+        <div class="doc-sec-head">I. LESSEE & GUARANTOR DETAILS</div>
+        <table class="doc-table">
+            <tr><td class="doc-label">Full Name:</td><td id="o_name" style="font-weight:700"></td><td class="doc-label">DOB:</td><td id="o_dob"></td></tr>
+            <tr><td class="doc-label">Passport No:</td><td id="o_id"></td><td class="doc-label">Mobile:</td><td id="o_phone"></td></tr>
+            <tr><td class="doc-label">Address:</td><td colspan="3" id="o_addr"></td></tr>
+            <tr><td class="doc-label">Guarantor:</td><td colspan="3" id="o_guar"></td></tr>
+        </table>
+        <div class="doc-sec-head">II. ASSET & GEAR SPECIFICATIONS</div>
+        <table class="doc-table">
+            <tr><td class="doc-label">Vehicle:</td><td id="o_bike"></td><td class="doc-label">Plate:</td><td id="o_plate" style="font-weight:700"></td></tr>
+            <tr><td class="doc-label">KM / Fuel:</td><td><span id="o_km"></span> KM / <span id="o_fuel"></span></td><td class="doc-label">Issued:</td><td class="p_date"></td></tr>
+            <tr><td class="doc-label">Gear Inventory:</td><td colspan="3" id="o_acc" style="color:var(--navy); font-weight:700; font-size:8.5pt;"></td></tr>
+        </table>
+        <div class="doc-sec-head">III. LEASE TERMS & FINANCIALS</div>
+        <table class="doc-table">
+            <tr><td class="doc-label">Lease Period:</td><td colspan="3" style="font-weight:700;"><span id="o_start"></span> &mdash; <span id="o_end"></span></td></tr>
+            <tr><td class="doc-label">Daily Rate:</td><td><span id="o_rate"></span></td><td class="doc-label">Days:</td><td><span id="o_days"></span></td></tr>
+            <tr><td class="doc-label">Deposit:</td><td><span id="o_dep"></span> <span class="o_curr"></span></td><td class="doc-label" style="background:var(--navy); color:var(--gold)">GRAND TOTAL:</td><td style="font-weight:800; font-size:12pt; color:var(--navy);"><span id="o_total"></span> <span class="o_curr"></span></td></tr>
+        </table>
+        <div class="doc-sec-head">IV. TERMS, PENALTIES & CONDITIONS</div>
+        <ul class="doc-rules-list">
+            <li><span>1.</span><div><b>DELAYS:</b> Delays up to 3h are charged at 1/3 daily rate. Over 3h incur a full day charge plus penalty.</div></li>
+            <li><span>2.</span><div><b>MILEAGE LIMIT:</b> Daily limit is 200 KM. Any excess mileage beyond this limit shall be charged at a fixed rate of 0.50 EUR per additional kilometer.</div></li>
+            <li><span>3.</span><div><b>RESTRICTIONS:</b> Stunts, wheelies, off-road or racing is strictly forbidden. Violation Penalty: 500 <span class="o_curr"></span>.</div></li>
+            <li><span>4.</span><div><b>LIABILITY:</b> No Kasko (comp.) insurance. Lessee is 100% liable for all damages, theft or misused parts.</div></li>
+            <li><span>5.</span><div><b>TRAFFIC FINES:</b> All traffic/parking fines and HGS/OGS bridge tolls are the sole responsibility of the Lessee.</div></li>
+            <li><span>6.</span><div><b>THIRD PARTY:</b> The vehicle cannot be used or driven by anyone other than the specified Lessee.</div></li>
+            <li><span>7.</span><div><b>MAINTENANCE & DAMAGE:</b> In case of any damage, repairs/maintenance shall be carried out exclusively by the authorized dealer service. The Lessee hereby unconditionally and irrevocably promises, accepts, and undertakes to pay all costs, parts, labor fees, and losses immediately on demand.</div></li>
+            <li><span>8.</span><div><b>TERMINATION:</b> Lessor reserves the right to terminate this agreement and repossess the vehicle if misused.</div></li>
+            <li><span>9.</span><div><b>DEPOSIT REFUND:</b> Security deposits will be processed and refunded within 10 to 15 business days following the vehicle's safe return.</div></li>
+            <li><span>10.</span><div><b>LEGAL:</b> Istanbul Caglayan Courts are the sole authorized jurisdiction for all legal disputes.</div></li>
+        </ul>
+        
+        <div class="doc-sig-row">
+            <div class="doc-sig-box"><div class="doc-sig-label">LESSOR / WANDER</div></div>
+            <div class="doc-sig-box"><div class="doc-sig-label">LESSEE (SIGNATURE)</div></div>
+            <div class="doc-sig-box"><div class="doc-sig-label">GUARANTOR</div></div>
+        </div>
+        <div class="doc-footer">REF: WR-<span class="f_rand"></span> | Printed: <span class="p_date"></span> | Digital Copy Page 1 of 3</div>
+    </div>
+    
+    <div class="doc-page">
+        <div class="doc-header">
+            <div class="doc-logo">Wander Motorcycle <span>Rentals</span></div>
+            <div class="doc-company">Annex 1: Technical Inspection Report</div>
+        </div>
+        <div class="doc-sec-head">V. VEHICLE CONDITION SCHEMATIC</div>
+        <p style="font-size: 8.5pt; margin-top: 0; color:#555;">Lessee must inspect and mark all existing scratches/damages before check-out.</p>
+        
+        <div style="border: 1.5pt solid #000; height: 330px; margin: 10px 0; background: #fff; display: flex; align-items: center; justify-content: center; color: #ddd; font-weight: 800; font-size: 18pt;">[ TECHNICAL INSPECTION DIAGRAM ]</div>
+        
+        <div class="secure-promissory-container">
+            <div class="secure-promissory-header">
+                <div>
+                    <div class="secure-title-main">TİCARİ VADELİ TEMİNAT BONOSU</div>
+                    <div class="secure-title-sub">Official Commercial Promissory Note & Indemnity Bond</div>
+                </div>
+                <div class="secure-serial">SERI NO: WMR-<span class="f_rand"></span></div>
+            </div>
+            
+            <table class="secure-grid-table">
+                <tr>
+                    <td class="secure-grid-label">DÜZENLEME TARİHİ (ISSUE DATE)</td>
+                    <td class="secure-editable-cell">. . . . / . . . . / 20 . .</td>
+                    <td class="secure-grid-label">VADE TARİHİ (DUE DATE)</td>
+                    <td class="secure-editable-cell">Görüldüğünde (On Demand)</td>
+                </tr>
+                <tr>
+                    <td class="secure-grid-label">TAAHHÜT EDİLEN TUTAR (VAL)</td>
+                    <td class="secure-editable-cell" style="font-size:11px; background:#f8fafc; font-weight:bold;">[ ........................................ ] <span id="o_bono_curr"></span></td>
+                    <td class="secure-grid-label">ASIL BORÇLU (LESSEE)</td>
+                    <td class="secure-editable-cell">..................................................................</td>
+                </tr>
+                <tr>
+                    <td class="secure-grid-label">YAZI İLE TUTAR (IN WORDS)</td>
+                    <td colspan="3" class="secure-editable-cell">Yalnız # ...................................................................................................................................... #</td>
+                </tr>
+            </table>
+
+            <div class="secure-legal-clause">
+                İşbu bono karşılığında yukarıda bilgileri yer alan Asıl Borçlu (Kiralayan), <b>Wander Motorcycle Rentals</b> (Lehdar) emrühavalesine yukarıda tanzim edilen nakit tutarı kayıtsız, şartsız, protestosuz ve tamamen ödemeyi taahhüt eder. İşbu senet, kiralama operasyon sözleşmesinden bağımsız ve soyut bir finansal hukuki teminat senedi olup araç hasar bedelleri, hukuki rücu, değer kayıpları ve idari/trafik cezalarının tahsili amacıyla tanzim edilmiştir. Muacceliyet durumunda İstanbul Merkez Mahkemeleri ve İcra Daireleri yetkilidir.
+                <br><i style="font-size:7px; color:#475569;">The Debtor and the Guarantor hereby unconditionally and irrevocably promise to pay on demand to the order of Wander Motorcycle Rentals the sum specified above as an independent corporate financial indemnity bond. Legal jurisdictions belong solely to Istanbul Central Courts and Enforcement Offices.</i>
+            </div>
+
+            <div class="secure-sig-row">
+                <div class="secure-sig-box">
+                    <div class="secure-sig-label">BORÇLU İMZA 1 (METİN İÇİ)</div>
+                    <div class="secure-sig-hint">Asıl Borçlu Açığa İmza</div>
+                </div>
+                <div class="secure-sig-box">
+                    <div class="secure-sig-label">BORÇLU İMZA 2 (RESMİ)</div>
+                    <div class="secure-sig-hint">Asıl Borçlu Resmi İmza</div>
+                </div>
+                <div class="secure-sig-box" style="border-color: #c5a059;">
+                    <div class="secure-sig-label" style="color: #c5a059; font-weight:bold;">MÜTESELSİL KEFİL İMZA</div>
+                    <div class="secure-sig-hint" style="color: #c5a059;">Co-Signer / Guarantor</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="doc-sig-row" style="margin-top: 10px;">
+            <div class="doc-sig-box" style="height: 55px;"><div class="doc-sig-label">CHECK-OUT CONFIRMATION</div></div>
+            <div class="doc-sig-box" style="height: 55px;"><div class="doc-sig-label">RETURN CONFIRMATION</div></div>
+        </div>
+        <div class="doc-footer">REF ID: WR-<span class="f_rand"></span> | Inspection Date: <span class="p_date"></span> | Digital Copy Page 2 of 3</div>
+    </div>
+
+    <div class="doc-page" id="o_photo_page" style="display: none;">
+        <div class="doc-header">
+            <div class="doc-logo">Wander Motorcycle <span>Rentals</span></div>
+            <div class="doc-company">Annex 2: Damage Photo Inspection Log</div>
+        </div>
+        <div class="doc-sec-head">VI. VISUAL VEHICLE EVIDENCE / CHECK-OUT CONDITIONS</div>
+        <p style="font-size: 8.5pt; margin-top: 0; color:#555;">The following photographic report details the exact physical condition of the vehicle prior to key handover.</p>
+        
+        <div id="o_photos_grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px;"></div>
+
+        <div class="doc-sig-row" style="margin-top: 30px;">
+            <div class="doc-sig-box" style="height: 60px;"><div class="doc-sig-label">LESSOR VERIFICATION</div></div>
+            <div class="doc-sig-box" style="height: 60px;"><div class="doc-sig-label">LESSEE VERIFICATION</div></div>
+        </div>
+        <div class="doc-footer">REF ID: WR-<span class="f_rand"></span> | Inspection Date: <span class="p_date"></span> | Digital Copy Page 3 of 3</div>
+    </div>
+</div>
+
+<script>
+    function runCalc() {
+        const s = document.getElementById('i_start').value;
+        const e = document.getElementById('i_end').value;
+        const rate = parseFloat(document.getElementById('i_rate').value) || 0;
+        const curr = document.getElementById('i_curr').value;
+        const currNames = { 'EUR': 'EUR', 'USD': 'USD', 'TL': 'TRY' };
+        
+        document.getElementById('v_curr_label').innerText = currNames[curr];
+        document.querySelectorAll('.o_curr').forEach(el => el.innerText = currNames[curr]);
+        document.getElementById('o_bono_curr').innerText = currNames[curr];
+        
+        if (s && e) {
+            const days = Math.ceil(Math.abs(new Date(e) - new Date(s)) / (1000 * 60 * 60 * 24)) || 0;
+            const total = (days * rate).toFixed(2);
+            document.getElementById('v_days').innerText = days;
+            document.getElementById('v_total').innerText = total + " " + currNames[curr];
+            document.getElementById('o_days').innerText = days;
+            document.getElementById('o_total').innerText = total;
+            document.getElementById('o_start').innerText = s.replace('T', ' ');
+            document.getElementById('o_end').innerText = e.replace('T', ' ');
+            document.getElementById('o_rate').innerText = rate + " " + currNames[curr];
+        }
+        sync();
+    }
+
+    function sync() {
+        const fields = { name:'o_name', dob:'o_dob', id:'o_id', phone:'o_phone', addr:'o_addr', bike:'o_bike', plate:'o_plate', km:'o_km', fuel:'o_fuel', guar:'o_guar', dep:'o_dep' };
+        for(let key in fields) { if(document.getElementById(fields[key])) document.getElementById(fields[key]).innerText = document.getElementById('i_'+key).value; }
+        let accs = [];
+        document.querySelectorAll('#acc_list .acc-chip').forEach(item => {
+            const cb = item.querySelector('input[type="checkbox"]');
+            const num = item.querySelector('input[type="number"]');
+            if(cb.checked) accs.push(`${cb.value} (x${num.value})`);
+        });
+        document.getElementById('o_acc').innerText = accs.length > 0 ? accs.join(" / ") : "NONE";
+        const now = new Date().toLocaleString('en-GB');
+        document.querySelectorAll('.p_date').forEach(el => el.innerText = now);
+        if(!window.contractID) window.contractID = Math.floor(100000 + Math.random() * 900000);
+        document.querySelectorAll('.f_rand').forEach(el => el.innerText = window.contractID);
+    }
+
+    function loadPhotos(input) {
+        const files = input.files;
+        const uiPreview = document.getElementById('ui_photo_preview');
+        const printGrid = document.getElementById('o_photos_grid');
+        const photoPage = document.getElementById('o_photo_page');
+
+        uiPreview.innerHTML = '';
+        printGrid.innerHTML = '';
+
+        if (files.length === 0) {
+            photoPage.style.display = 'none';
+            return;
+        }
+
+        photoPage.style.display = 'block';
+
+        Array.from(files).forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const uiImg = document.createElement('img');
+                uiImg.src = e.target.result;
+                uiImg.style.width = '75px';
+                uiImg.style.height = '75px';
+                uiImg.style.objectFit = 'cover';
+                uiImg.style.borderRadius = '8px';
+                uiImg.style.border = '2px solid var(--gold)';
+                uiPreview.appendChild(uiImg);
+
+                const printImg = document.createElement('img');
+                printImg.src = e.target.result;
+                printImg.style.width = '100%';
+                printImg.style.height = '145px';
+                printImg.style.objectFit = 'cover';
+                printImg.style.border = '1px solid #000';
+                printImg.style.borderRadius = '4px';
+                printGrid.appendChild(printImg);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function triggerPrint() {
+        runCalc();
+        const area = document.getElementById('print-area');
+        area.style.display = 'block';
+        area.style.position = 'static';
+        setTimeout(() => { window.print(); area.style.display = 'none'; area.style.position = 'absolute'; }, 300);
+    }
+
+    async function saveAsPDF() {
+        runCalc();
+        const element = document.getElementById('print-area');
+        element.style.display = 'block';
+        element.style.position = 'static';
+        const opt = {
+            margin: 0,
+            filename: `Wander_Rentals_${document.getElementById('i_name').value}.pdf`,
+            image: { type: 'jpeg', quality: 1.0 },
+            html2canvas: { scale: 3, useCORS: true, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        try { await new Promise(r => setTimeout(r, 400)); await html2pdf().set(opt).from(element).save(); } 
+        finally { element.style.display = 'none'; element.style.position = 'absolute'; }
+    }
+</script>
+</body>
+</html>
